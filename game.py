@@ -43,7 +43,7 @@ class Game:
         self.init_explosion_images()
 
         self.score = 0
-        self.power_up_rate = 0.9
+        self.power_up_rate = 0.9 # default value: 0.9
 
         # Float_Texts
         self.score_textes = []
@@ -281,16 +281,49 @@ class Game:
 
 
     def run(self):
+        previous_tick = pygame.time.get_ticks()
+        exec_time = 0
+        wait_time = 0
         while self.running:
             while self.gameover:
                 self.show_gameover_screen()
                 self.init()
                 self.gameover = False
 
+            # execution time
+            exec_time = pygame.time.get_ticks() - previous_tick
+            # log.info("[exec_time] " + str(exec_time) + " ms")
+
+            # wait until 1/FPS has passed (16.6666667 ms)
             self.clock.tick(config.FPS) # keep loop running at the right speed
+
+            # measure time waited
+            wait_time = pygame.time.get_ticks() - previous_tick - exec_time
+            # log.info("[wait_time]" + str(wait_time) + " ms")
+            # log.info("[wait_time + exec_time] " + str(wait_time + exec_time) + " ms") # should be 15 or 16
+
+            print_percent_bar(exec_time, 16, True, '[0]', '[16]ms [exec_time='+str(exec_time)+'|wait_time='+str(wait_time)+']')
+
+            # sample time right after the end of the waiting
+            previous_tick = pygame.time.get_ticks()
+            # log.info("[Start] " + str(previous_tick / 1000) + " s")
+
             self.process_inputs()
             self.update()
             self.draw()
             self.render()
+
+
         log.info("Exiting the Game.run() loop")
         pygame.quit()
+
+
+# print percent bar. fraction must be float between 0 and 1
+def print_percent_bar(squares, size=50, newLine=True, debuttext='', endtext=''):
+    if squares > size: squares = size
+    if squares < 0: squares = 0
+    bar     = "▒" * ( int(squares) + 1) # "▓"
+    nobar   = "░" * ( size - 1 - int(squares))
+    if squares == size:
+        bar = "█" * size
+    print(debuttext, bar, nobar, endtext, sep='', end= '\n' if newLine else '')
